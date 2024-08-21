@@ -9,7 +9,7 @@ from aiogram.types import Message
 from aiogram import F
 from aiogram.types import FSInputFile
 
-API_TOKEN = 'your_telegram_bot_API'
+API_TOKEN = 'YOUR_TELEGRAM_BOT_API_TOKEN_HERE'
 LOG_FILE = "command_log.txt"
 
 # Configure logging
