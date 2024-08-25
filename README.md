@@ -51,7 +51,7 @@ A Telegram bot built with [aiogram 3.0](https://docs.aiogram.dev/en/latest/) tha
 
 ### Commands
 Every displayed result use a Telegram Bot API Markdown.
-
+- **/auth**: Authentification for access to bot features
 - **/start**: Greets the user and provides a brief introduction.
 - **/exec `<command>`**: Executes a shell command on the Linux system.
   - Example: `/exec ls -la`
