@@ -9,8 +9,10 @@ from aiogram.types import Message
 from aiogram import F
 from aiogram.types import FSInputFile
 
-API_TOKEN = 'YOUR_TELEGRAM_BOT_API_TOKEN_HERE'
+API_TOKEN = 'YOUR_API_TOKEN_BOT'
 LOG_FILE = "command_log.txt"
+PASSWORD = 'password'  # Define the password here
+authenticated_users = {}  # Dictionary to track authenticated users
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -34,12 +36,29 @@ async def start_command(message: Message):
     user_first_name = message.from_user.first_name
     await message.reply(
         f"*Welcome, {user_first_name}!* 👋\n"
-        "I can send notifications and execute commands on your Linux system.",
+        "Please authenticate using /auth <password> to access bot features.",
         parse_mode="Markdown"
     )
 
+@dp.message(Command(commands=["auth"]))
+async def auth_command(message: Message):
+    password = message.text.strip().split(" ", 1)
+    if len(password) == 2 and password[1] == PASSWORD:
+        authenticated_users[message.from_user.id] = True
+        await message.reply("🔓 *Authentication successful!*\nYou can now use bot commands.", parse_mode="Markdown")
+    else:
+        await message.reply("❌ *Authentication failed!*\nPlease try again.", parse_mode="Markdown")
+
+def is_authenticated(user_id: int) -> bool:
+    """Check if a user is authenticated."""
+    return authenticated_users.get(user_id, False)
+
 @dp.message(Command(commands=["exec"]))
 async def exec_command(message: Message):
+    if not is_authenticated(message.from_user.id):
+        await message.reply("🔒 *Please authenticate first using /auth <password>.*", parse_mode="Markdown")
+        return
+
     command = message.text.strip().split(" ", 1)
     if len(command) == 2:
         try:
@@ -55,6 +74,10 @@ async def exec_command(message: Message):
 
 @dp.message(Command(commands=["notify"]))
 async def notify_command(message: Message):
+    if not is_authenticated(message.from_user.id):
+        await message.reply("🔒 *Please authenticate first using /auth <password>.*", parse_mode="Markdown")
+        return
+
     notification = message.text.strip().split(" ", 1)
     if len(notification) == 2:
         await message.reply(f"🔔 *Notification sent*:\n_{notification[1]}_", parse_mode="Markdown")
@@ -64,6 +87,10 @@ async def notify_command(message: Message):
 
 @dp.message(Command(commands=["status"]))
 async def status_command(message: Message):
+    if not is_authenticated(message.from_user.id):
+        await message.reply("🔒 *Please authenticate first using /auth <password>.*", parse_mode="Markdown")
+        return
+
     cpu_usage = psutil.cpu_percent(interval=1)
     memory_info = psutil.virtual_memory()
     disk_info = psutil.disk_usage('/')
@@ -82,6 +109,10 @@ async def status_command(message: Message):
 
 @dp.message(Command(commands=["logfile"]))
 async def logfile_command(message: Message):
+    if not is_authenticated(message.from_user.id):
+        await message.reply("🔒 *Please authenticate first using /auth <password>.*", parse_mode="Markdown")
+        return
+
     try:
         log_file = FSInputFile(LOG_FILE)
         await message.reply_document(document=log_file, caption="📄 *Here is the command log file.*", parse_mode="Markdown")
